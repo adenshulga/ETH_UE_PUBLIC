@@ -28,6 +28,6 @@ container_setup/launch_container.sh
 
 ### Data aqcuisition
 
-- ETH 1 min data was downloaded from kaggle(add link)
+- ETH 1 min data was downloaded from kaggle(https://www.kaggle.com/datasets/prasoonkottarathil/ethereum-historical-dataset)
 
 
