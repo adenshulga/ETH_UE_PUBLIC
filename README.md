@@ -1,15 +1,5 @@
 # ETH_UE
 
-
-price is always nominator/denominator
-
-for e.g. price of ETH/USDC is 2600/1, ETH = 2600 USDC
-
-general rule is that any interval is extended to closest outer ticks
-
-correct value changes when changing the position lays in responsibility of strategy
-
-
 ## Setup
 
 ### Dependencies installation
