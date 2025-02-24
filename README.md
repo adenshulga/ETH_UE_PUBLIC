@@ -25,5 +25,8 @@ container_setup/launch_container.sh
 ### Data aqcuisition
 
 - ETH 1 min data was downloaded from kaggle(https://www.kaggle.com/datasets/prasoonkottarathil/ethereum-historical-dataset)
-
+- 2024 minute data (https://www.cryptodatadownload.com/cdd/Binance_ETHUSDT_2024_minute.csv)
+- 2023 minute data (https://www.cryptodatadownload.com/cdd/Binance_ETHUSDT_2023_minute.csv)
+- 2022 minute data (https://www.cryptodatadownload.com/cdd/Binance_ETHUSDT_2022_minute.csv)
+- 2021 minute data (https://www.cryptodatadownload.com/cdd/Binance_ETHUSDT_2021_minute.csv)
 

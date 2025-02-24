@@ -1,9 +1,10 @@
-from abc import ABC, abstractmethod
-from torch import Tensor
-from torch.utils.data import Dataset, DataLoader
-from src.common_entities.custom_exceptions import CustomException
 import typing as tp
+from abc import abstractmethod
+
 import numpy as np
+from torch import Tensor
+from torch.utils.data import Dataset
+
 
 """
 Desing principles:
@@ -18,7 +19,7 @@ their orderbooks, options data, etc... I want to notate this input
 
 """
 
-PricePoint = tuple[float, np.datetime64]
+PricePoint = tuple[np.datetime64, float]
 
 
 class SizedDataset[T](Dataset[T]):
@@ -56,7 +57,7 @@ class SizedDatasetMapping[T](SizedDataset[T]):
 HistoricPricesDataset = tp.NewType("HistoricPricesDataset", SizedDataset[PricePoint])
 LastNPricesRegularDataset = tp.NewType(
     "LastNPricesRegularDataset", SizedDataset[Tensor]
-)
+)  # Regular implies that points are regular in time
 LastNPricesUnRegularDataset = tp.NewType(
     "LastNPricesUnRegularDataset", SizedDataset[list[PricePoint]]
 )
