@@ -5,6 +5,9 @@ import numpy as np
 from torch import Tensor
 from torch.utils.data import Dataset
 
+from src.common_entities.custom_exceptions import CustomException
+from omegaconf import DictConfig
+from hydra.utils import instantiate
 
 """
 Desing principles:
@@ -63,30 +66,38 @@ LastNPricesUnRegularDataset = tp.NewType(
 )
 
 
-# class MultiModalDatasetError(CustomException):
-#     pass
+class MultiModalDatasetError(CustomException):
+    pass
 
 
-# class MultiModalDataset[*Ts](SizedDataset[tuple[*Ts]]):
-#     """
-#     A generic dataset that zips together an arbitrary number of modality-specific datasets.
+class MultiModalDataset[*Ts](SizedDataset[tuple[*Ts]]):
+    """
+    A generic dataset that zips together an arbitrary number of modality-specific datasets.
 
-#     Each dataset should be a Dataset[T] where T is the sample type for that modality.
-#     __getitem__ returns a tuple (dataset1[i], dataset2[i], ...).
+    Each dataset should be a Dataset[T] where T is the sample type for that modality.
+    __getitem__ returns a tuple (dataset1[i], dataset2[i], ...).
 
-#     Due to the incompletness of type annotation features in modern python,
-#     always specify this class generic params
-#     """
+    Due to the incompletness of type annotation features in modern python,
+    always specify this class generic params
+    """
 
-#     def __init__(self, *datasets: SizedDataset[tp.Any]) -> None:
-#         self.datasets = datasets
-#         if not all(len(ds) == self.datasets[0] for ds in self.datasets):  # type: ignore
-#             raise MultiModalDatasetError("datasets")
-#         self._len = len(self.datasets[0])  # type: ignore
+    def __init__(self, *datasets: SizedDataset[tp.Any]) -> None:
+        self.datasets = datasets
+        if not all(len(ds) == self.datasets[0] for ds in self.datasets):  # type: ignore
+            raise MultiModalDatasetError("datasets have different lengthes")
+        self._len = len(self.datasets[0])  # type: ignore
 
-#     def __len__(self) -> int:
-#         # return self._length
-#         return self._len
+    def __len__(self) -> int:
+        return self._len
 
-#     def __getitem__(self, index: int) -> tuple[*Ts]:
-#         return tuple(ds[index] for ds in self.datasets)
+    def __getitem__(self, index: int) -> tuple[*Ts]:
+        return tuple(ds[index] for ds in self.datasets)
+
+    @staticmethod
+    def from_cfg(dataset_configs: list[DictConfig]) -> "MultiModalDataset[*Ts]":
+        datasets: list[SizedDataset[tp.Any]] = []
+        for cfg in dataset_configs:
+            dataset: SizedDataset[tp.Any] = instantiate(cfg)
+            datasets.append(dataset)
+
+        return MultiModalDataset(*datasets)

@@ -24,7 +24,7 @@ logger = CometLogger(
 
 
 # This square brackets syntax is "new generic syntax", helps specifying type variables
-@hydra.main()
+@hydra.main(config_path="config", config_name="master")
 def main[ElementaryDataT, TransformedDataT, PredictedT](
     cfg: DictConfig,
 ) -> None:
