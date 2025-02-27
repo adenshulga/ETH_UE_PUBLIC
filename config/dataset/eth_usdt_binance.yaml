@@ -1,0 +1,3 @@
+_target_: src.data_manipulation.datasets.eth_usd_binance.ETH_USD_Binance
+start_observations: "2024-11-30T08:35" 
+end_observations: "2024-12-01T00:52"
