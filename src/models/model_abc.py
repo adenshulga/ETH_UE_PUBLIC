@@ -35,9 +35,9 @@ class CustomModel[ElementaryDataT, TransformedDataT, PredictedT](Module, ABC):
     def save_model(self) -> str:
         """Returns path where model is saved"""
         pass
-
-    @abstractmethod
+    
     @staticmethod
+    @abstractmethod
     def load_model(path: str) -> "CustomModel":
         """Loads model given path"""
         pass
