@@ -1,4 +1,4 @@
-from src.models.naive import NaiveGaussian
+from src.models.quantile_forecasters.naive import NaiveGaussian
 
 
 __all__ = [
