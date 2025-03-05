@@ -29,13 +29,12 @@ class NaiveGaussian(BaseQuantileForecaster):
     def predict(
         self, dataset: SizedDataset[Tensor]
     ) -> tp.Sequence[Tensor]:
-        loc = dataset[:, -1]
+        loc = dataset[:, [-1], None].repeat(1, self.output_len, len(self.quantiles))
         scale = dataset[:, -self.input_len:].std(dim=1)
-        qvalues = []
-        for i in range(1, self.output_len+1):
-            gaussian = Normal(loc, scale*(i**0.5))
-            qvalues_i = torch.stack([gaussian.icdf(torch.tensor(q)) for q in self.quantiles])
-            qvalues.append(qvalues_i)
-        qvalues = torch.stack(qvalues)
-        qvalues = qvalues.permute(2, 0, 1)
+        scale = scale[:, None, None].repeat(1, self.output_len, len(self.quantiles))
+        sqrt_len = torch.arange(1, self.output_len + 1)**0.5
+        scale = scale * sqrt_len[None, :, None]
+        q = torch.tensor(self.quantiles)[None, None, :]
+        q = q.repeat(len(loc), self.output_len, 1)
+        qvalues = Normal(loc, scale).icdf(q)
         return qvalues
