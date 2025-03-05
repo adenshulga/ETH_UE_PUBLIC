@@ -1,4 +1,4 @@
-from src.evaluation.uncertainty_evaluator import PICP, ECE
+from src.evaluation.uncertainty_evaluator import PICP, ECE, CRPS
 import torch
 
 
@@ -26,3 +26,8 @@ class TestOnSyntheticData:
         evaluator = ECE(quantiles=self.quantiles)
         res = evaluator.evaluate(self.model_prediction, self.test_dataset)
         assert round(res.metrics['ece'], 2) == 0
+    
+    def test_crps(self):
+        evaluator = CRPS(quantiles=self.quantiles)
+        res = evaluator.evaluate(self.model_prediction, self.test_dataset)
+        assert round(res.metrics['crps'], 2) == 2.48
