@@ -1,12 +1,11 @@
 import typing as tp
 from src.evaluation.evaluator_abc import Evaluator, Results
-from abc import ABC
 from src.data_manipulation.custom_dataset_abc import SizedDataset
 from torch import Tensor
 import torch
 
 
-class UncertaintyEvaluator(Evaluator, ABC):
+class UncertaintyEvaluator(Evaluator):
     def __init__(self, quantiles: list[float]) -> None:
         self.quantiles = quantiles
 

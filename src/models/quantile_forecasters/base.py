@@ -7,7 +7,7 @@ from torch import Tensor
 from pytorch_lightning import LightningModule
 
 
-class BaseQuantileForecaster(CustomModel, LightningModule, ABC):
+class BaseQuantileForecaster(CustomModel, LightningModule):
     def __init__(
         self, 
         input_len: int, 
@@ -31,28 +31,3 @@ class BaseQuantileForecaster(CustomModel, LightningModule, ABC):
             step_size=self.step_size,
             shift_size=self.output_len,
         )
-
-    @abstractmethod
-    def fit(self, dataset: SizedDataset[SlidingWindowDataset]) -> None:
-        """
-        Returns data describing training process,
-        for e.g. gradient norms from epoch to epoch, losses and etc if necessary.
-        """
-        pass
-
-    @abstractmethod
-    def predict(
-        self, dataset: SizedDataset[Tensor]
-    ) -> tp.Sequence[Tensor]:
-        pass
-
-    @abstractmethod
-    def save_model(self) -> str:
-        """Returns path where model is saved"""
-        pass
-    
-    @staticmethod
-    @abstractmethod
-    def load_model(path: str) -> "CustomModel":
-        """Loads model given path"""
-        pass
