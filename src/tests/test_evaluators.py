@@ -5,13 +5,13 @@ import torch
 class TestOnSyntheticData:
     def setup_class(self):
         torch.manual_seed(1)
-        self.test_dataset = torch.randn(10, 100)
-        pred = torch.zeros(10, 100, 5)
-        pred[:, :, 0] = -2
-        pred[:, :, 1] = -1
-        pred[:, :, 2] = 0
-        pred[:, :, 3] = 1
-        pred[:, :, 4] = 2
+        self.test_dataset = torch.randn(1, 10, 100)
+        pred = torch.zeros(1, 10, 100, 5)
+        pred[:, :, :, 0] = -2
+        pred[:, :, :, 1] = -1
+        pred[:, :, :, 2] = 0
+        pred[:, :, :, 3] = 1
+        pred[:, :, :, 4] = 2
         self.model_prediction = pred
         self.quantiles = [0.025, 0.16, 0.5, 0.84, 0.975]
     

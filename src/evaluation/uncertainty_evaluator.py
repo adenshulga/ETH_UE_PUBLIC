@@ -1,4 +1,3 @@
-import typing as tp
 from src.evaluation.evaluator_abc import Evaluator, Results
 from src.data_manipulation.custom_dataset_abc import SizedDataset
 from torch import Tensor
@@ -13,13 +12,15 @@ class UncertaintyEvaluator(Evaluator):
 class PICP(UncertaintyEvaluator):
     def evaluate(
         self,
-        model_predictions: tp.Sequence[Tensor],
+        model_predictions: SizedDataset[Tensor],
         test_dataset: SizedDataset[Tensor],
     ) -> Results:
-        lbound = model_predictions[:, :, 0]
-        ubound = model_predictions[:, :, -1]
-        mask = (lbound <= test_dataset) & (test_dataset <= ubound)
-        picp = mask.to(float).mean().item()
+        pred = torch.tensor(model_predictions)
+        target = torch.tensor(test_dataset)
+        lbound = pred[:, :, :, 0]
+        ubound = pred[:, :, :, -1]
+        mask = (lbound <= target) & (target <= ubound)
+        picp = mask.float().mean().item()
         metrics = {'picp': picp}
         return Results(metrics=metrics, images=None)
 
@@ -27,15 +28,17 @@ class PICP(UncertaintyEvaluator):
 class ECE(UncertaintyEvaluator):
     def evaluate(
         self,
-        model_predictions: tp.Sequence[Tensor],
+        model_predictions: SizedDataset[Tensor],
         test_dataset: SizedDataset[Tensor],
     ) -> Results:
+        pred = torch.tensor(model_predictions)
+        target = torch.tensor(test_dataset)
         ece = []
-        for i in range(len(self.quantiles) // 2):    
-            lbound = model_predictions[:, :, i]
-            ubound = model_predictions[:, :, -i-1]
-            mask = (lbound <= test_dataset) & (test_dataset <= ubound)
-            picp = mask.to(float).mean().item()
+        for i in range(len(self.quantiles) // 2):
+            lbound = pred[:, :, :, i]
+            ubound = pred[:, :, :, -i-1]
+            mask = (lbound <= target) & (target <= ubound)
+            picp = mask.float().mean().item()
             ece.append(abs(picp - (self.quantiles[-i-1] - self.quantiles[i])))
         metrics = {'ece': sum(ece) / len(ece)}
         return Results(metrics=metrics, images=None)
@@ -44,16 +47,16 @@ class ECE(UncertaintyEvaluator):
 class CRPS(UncertaintyEvaluator):
     def evaluate(
         self,
-        model_predictions: tp.Sequence[Tensor],
+        model_predictions: SizedDataset[Tensor],
         test_dataset: SizedDataset[Tensor],
     ) -> Results:
-        pred = model_predictions
-        target = test_dataset[:, :, None]
+        pred = torch.tensor(model_predictions)
+        target = torch.tensor(test_dataset)[:, :, :, None]
         error = torch.abs(pred - target) * 2
         umask = target < pred
         lmask = target >= pred
-        q = torch.tensor(self.quantiles)
-        q = q[None, None, :].repeat(pred.shape[0], pred.shape[1], 1)
+        q = torch.tensor(self.quantiles)[None, None, None, :]
+        q = q.repeat(1, pred.shape[1], pred.shape[2], 1)
         error[umask] = error[umask] * q[umask]
         error[lmask] = error[lmask] * (1 - q[lmask])
         metrics = {'crps': error.mean().item()}

@@ -9,7 +9,6 @@ import os
 
 
 class NaiveGaussian(BaseQuantileForecaster):
-
     def fit(self, dataset: SizedDataset[SlidingWindowDataset]) -> None:
         pass
     
@@ -28,13 +27,15 @@ class NaiveGaussian(BaseQuantileForecaster):
 
     def predict(
         self, dataset: SizedDataset[Tensor]
-    ) -> tp.Sequence[Tensor]:
-        loc = dataset[:, [-1], None].repeat(1, self.output_len, len(self.quantiles))
-        scale = dataset[:, -self.input_len:].std(dim=1)
-        scale = scale[:, None, None].repeat(1, self.output_len, len(self.quantiles))
+    ) -> SizedDataset[Tensor]:
+        loc = torch.tensor(dataset)[:, :, [-1], None]
+        loc = loc.repeat(1, 1, self.output_len, len(self.quantiles))
+        scale = torch.tensor(dataset)[:, :, -self.input_len:].std(dim=2)
+        scale = scale[:, :, None, None]
+        scale = scale.repeat(1, 1, self.output_len, len(self.quantiles))
         sqrt_len = torch.arange(1, self.output_len + 1)**0.5
-        scale = scale * sqrt_len[None, :, None]
-        q = torch.tensor(self.quantiles)[None, None, :]
-        q = q.repeat(len(loc), self.output_len, 1)
+        scale = scale * sqrt_len[None, None, :, None]
+        q = torch.tensor(self.quantiles)[None, None, None, :]
+        q = q.repeat(1, loc.shape[1], self.output_len, 1)
         qvalues = Normal(loc, scale).icdf(q)
         return qvalues

@@ -28,7 +28,7 @@ class CustomModel[ElementaryDataT, TransformedDataT, PredictedT](Module, ABC):
     @abstractmethod
     def predict(
         self, dataset: SizedDataset[TransformedDataT]
-    ) -> tp.Sequence[PredictedT]:
+    ) -> SizedDataset[PredictedT]:
         pass
 
     @abstractmethod

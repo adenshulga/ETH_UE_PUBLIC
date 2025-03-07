@@ -38,9 +38,11 @@ class TestOnSyntheticData:
         model.fit(train_dataset)
         for (input_seq, target_seq) in test_dataset:
             break
+        input_seq = input_seq[None, ...]
         pred = model.predict(input_seq)
         assert pred.shape == (
-            self.train_seq.shape[0], self.output_len, len(self.quantiles)
+            1, self.train_seq.shape[0], 
+            self.output_len, len(self.quantiles)
         )
 
     @pytest.mark.parametrize('model_class', model_classes)
