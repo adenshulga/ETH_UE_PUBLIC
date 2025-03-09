@@ -27,7 +27,7 @@ class Evaluator[PredictedT, TransformedDataT](ABC):
     @abstractmethod
     def evaluate(
         self,
-        model_predictions: tp.Sequence[PredictedT],
+        model_predictions: SizedDataset[PredictedT],
         test_dataset: SizedDataset[TransformedDataT],
     ) -> Results:
         pass
