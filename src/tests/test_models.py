@@ -17,22 +17,22 @@ class TestOnSyntheticData:
     
     @pytest.mark.parametrize('model_class', model_classes)
     def test_creation(self, model_class):
-        model = model_class(self.input_len, self.output_len)
+        model = model_class(self.input_len, self.output_len, self.quantiles)
     
     @pytest.mark.parametrize('model_class', model_classes)
     def test_transform(self, model_class):
-        model = model_class(self.input_len, self.output_len)
+        model = model_class(self.input_len, self.output_len, self.quantiles)
         train_dataset = model.transform(self.train_seq)
 
     @pytest.mark.parametrize('model_class', model_classes)
     def test_training(self, model_class):
-        model = model_class(self.input_len, self.output_len)
+        model = model_class(self.input_len, self.output_len, self.quantiles)
         train_dataset = model.transform(self.train_seq)
         model.fit(train_dataset)
 
     @pytest.mark.parametrize('model_class', model_classes)
     def test_prediction(self, model_class):
-        model = model_class(self.input_len, self.output_len)
+        model = model_class(self.input_len, self.output_len, self.quantiles)
         train_dataset = model.transform(self.train_seq)
         test_dataset = model.transform(self.test_seq)
         model.fit(train_dataset)
@@ -47,7 +47,7 @@ class TestOnSyntheticData:
 
     @pytest.mark.parametrize('model_class', model_classes)
     def test_loading(self, model_class):
-        model = model_class(self.input_len, self.output_len)
+        model = model_class(self.input_len, self.output_len, self.quantiles)
         path = model.save_model()
         model = model_class.load_model(path)
         assert model.input_len == self.input_len
