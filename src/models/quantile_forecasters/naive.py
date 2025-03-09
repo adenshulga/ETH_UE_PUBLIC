@@ -1,25 +1,10 @@
 from src.models.quantile_forecasters.base import BaseQuantileForecaster
-from src.data_manipulation.custom_dataset_abc import SizedDataset
-from src.data_manipulation.sliding_window import SlidingWindowDataset
 from torch.distributions import Normal
 import torch
 from torch import Tensor
-import os
 
 
-class Naive(BaseQuantileForecaster):
-    def fit(self, dataset: SizedDataset[SlidingWindowDataset]) -> None:
-        pass
-
-    def save_model(self) -> str:
-        save_dir = '.temp'
-        os.makedirs(save_dir, exist_ok=True)
-        path = os.path.join(save_dir, 'hparams.pth')
-        torch.save(dict(self.hparams), path)
-        return path
-
-
-class NaiveGaussian(Naive):
+class NaiveGaussian(BaseQuantileForecaster):
     """
     Naive Gaussian model predicts quantiles by Gaussian distribution with
     parameters mu and sigma, where mu is the last observation, sigma is the
@@ -50,7 +35,7 @@ class NaiveGaussian(Naive):
         return qvalues
 
 
-class NaiveBootstrap(Naive):
+class NaiveBootstrap(BaseQuantileForecaster):
     """
     Naive Bootstrap model predicts quantiles by empirical quantiles of the
     cumulative sum of the last observation and the random residuals of the
@@ -59,11 +44,11 @@ class NaiveBootstrap(Naive):
     edition, Chapter 5.5, OTexts: Melbourne, Australia. OTexts.com/fpp3.
     Accessed on March, 2025.
     """
-
     def __init__(
         self,
         input_len: int,
         output_len: int,
+        target_dim: int,
         quantile_levels: list[float] = [0.025, 0.5, 0.975],
         step_size: int = 1,
         num_samples: int = 1000,
@@ -77,7 +62,7 @@ class NaiveBootstrap(Naive):
             num_samples: number of sampled residuals is used for emprical
                 quantile calculation.
         """
-        super().__init__(input_len, output_len, quantile_levels, step_size)
+        super().__init__(input_len, output_len, target_dim, quantile_levels, step_size)
         self.save_hyperparameters()
         self.num_samples = num_samples
 
@@ -87,10 +72,10 @@ class NaiveBootstrap(Naive):
         return NaiveBootstrap(**hparams)
 
     def _predict_quantiles(self, input_seq: Tensor) -> Tensor:
-        b, d, size = input_seq.shape
+        b, _, size = input_seq.shape
         h = self.output_len
         residual = input_seq[:, :, 1:] - input_seq[:, :, :-1]
-        forecast_sample = torch.zeros(b, d, h, self.num_samples)
+        forecast_sample = torch.zeros(b, self.target_dim, h, self.num_samples)
         for i in range(self.num_samples):
             resampled_residual = residual[:, :, torch.randint(0, size - 1, (h,))]
             last = input_seq[:, :, [-1]]

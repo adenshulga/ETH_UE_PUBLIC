@@ -180,3 +180,9 @@ cython_debug/
 # VSCode
 .vscode/settings.json
 .temp/
+
+# Comet ML
+.eth-ue/*
+
+# Torch lightning
+checkpoints/*
