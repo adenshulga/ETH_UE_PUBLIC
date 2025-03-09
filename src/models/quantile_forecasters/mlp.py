@@ -4,33 +4,28 @@ import torch
 from torch import Tensor
 
 
-class LSTMModule(nn.Module):
+class MLPModule(nn.Module):
     def __init__(
         self, target_dim: int, hidden_dim: int, num_layers: int, num_quantiles: int
     ):
         super().__init__()
         self.target_dim = target_dim
         self.num_quantiles = num_quantiles
-        self.lstm = nn.LSTM(
-            input_size=target_dim,
-            hidden_size=hidden_dim,
-            num_layers=num_layers,
-            batch_first=True,
-        )
-        self.output_projection = nn.Linear(
-            in_features=hidden_dim, out_features=target_dim * num_quantiles
-        )
+        layers = [nn.Linear(target_dim, hidden_dim), nn.ReLU()]
+        layers.append(nn.Linear(hidden_dim, target_dim * num_quantiles))
+        for _ in range(1, num_layers):
+            layers.extend([nn.Linear(hidden_dim, hidden_dim), nn.ReLU()])
+        self.mlp = nn.Sequential(*layers)
 
     def forward(self, x: Tensor) -> Tensor:
         x = x.permute(0, 2, 1)
-        x, _ = self.lstm(x)
-        x = self.output_projection(x)
+        x = self.mlp(x)
         x = x.permute(0, 2, 1)
         x = x.reshape(x.shape[0], self.target_dim, -1, self.num_quantiles)
         return x
 
 
-class LSTMForecaster(BaseTorchQuantileForecaster):
+class MLPForecaster(BaseTorchQuantileForecaster):
     def __init__(
         self,
         input_len: int,
@@ -77,7 +72,7 @@ class LSTMForecaster(BaseTorchQuantileForecaster):
         self.num_layers = num_layers
         self.hidden_dim = hidden_dim
 
-        self.model = LSTMModule(
+        self.model = MLPModule(
             target_dim=target_dim,
             hidden_dim=hidden_dim,
             num_layers=num_layers,
@@ -85,8 +80,8 @@ class LSTMForecaster(BaseTorchQuantileForecaster):
         )
 
     @staticmethod
-    def load_model(path: str) -> "LSTMForecaster":
-        return LSTMForecaster.load_from_checkpoint(path)
+    def load_model(path: str) -> "MLPForecaster":
+        return MLPForecaster.load_from_checkpoint(path)
 
     def _predict_quantiles(self, input_seq: Tensor) -> Tensor:
         with torch.no_grad():

@@ -1,36 +1,49 @@
 from src.models.quantile_forecasters.base import BaseTorchQuantileForecaster
-import torch.nn as nn
 import torch
+import torch.nn as nn
 from torch import Tensor
 
 
-class LSTMModule(nn.Module):
+class TransformerEncoderModule(nn.Module):
     def __init__(
-        self, target_dim: int, hidden_dim: int, num_layers: int, num_quantiles: int
+        self,
+        target_dim: int,
+        d_model: int,
+        dim_feedforward: int,
+        num_layers: int,
+        num_heads: int,
+        num_quantiles: int,
+        dropout: float,
     ):
         super().__init__()
         self.target_dim = target_dim
         self.num_quantiles = num_quantiles
-        self.lstm = nn.LSTM(
-            input_size=target_dim,
-            hidden_size=hidden_dim,
-            num_layers=num_layers,
+        self.input_projection = nn.Linear(target_dim, d_model)
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=d_model,
+            nhead=num_heads,
+            dim_feedforward=dim_feedforward,
+            dropout=dropout,
             batch_first=True,
         )
+        self.transformer_encoder = nn.TransformerEncoder(
+            encoder_layer, num_layers=num_layers
+        )
         self.output_projection = nn.Linear(
-            in_features=hidden_dim, out_features=target_dim * num_quantiles
+            in_features=d_model, out_features=target_dim * num_quantiles
         )
 
     def forward(self, x: Tensor) -> Tensor:
         x = x.permute(0, 2, 1)
-        x, _ = self.lstm(x)
+        x = self.input_projection(x)
+        x = self.transformer_encoder(x)
         x = self.output_projection(x)
         x = x.permute(0, 2, 1)
         x = x.reshape(x.shape[0], self.target_dim, -1, self.num_quantiles)
         return x
 
 
-class LSTMForecaster(BaseTorchQuantileForecaster):
+class TransfomerForecaster(BaseTorchQuantileForecaster):
     def __init__(
         self,
         input_len: int,
@@ -44,7 +57,10 @@ class LSTMForecaster(BaseTorchQuantileForecaster):
         accelerator: str = "cpu",
         enable_progress_bar: bool = True,
         num_layers: int = 1,
-        hidden_dim: int = 32,
+        d_model: int = 32,
+        num_heads: int = 4,
+        dim_feedforward: int = 128,
+        dropout: float = 0.1,
     ):
         """
         Args:
@@ -59,7 +75,11 @@ class LSTMForecaster(BaseTorchQuantileForecaster):
             accelerator: name of the device for training.
             enable_progress_bar: if True, enables progress bar in training.
             num_layers: number of LSTM layers.
-            hidden_dim: hidden dimensionality of LSTM layers.
+            d_model: the number of expected features in the input of Transformer.
+            nhead: the number of heads in Transformer.
+            dim_feedforward: the dimension of the feedforward network model of 
+                Transformer.
+            dropout: the dropout value of Transformer.
         """
         super().__init__(
             input_len,
@@ -75,18 +95,24 @@ class LSTMForecaster(BaseTorchQuantileForecaster):
         )
         self.save_hyperparameters()
         self.num_layers = num_layers
-        self.hidden_dim = hidden_dim
+        self.d_model = d_model
+        self.num_heads = num_heads
+        self.dim_feedforward = dim_feedforward
+        self.dropout = dropout
 
-        self.model = LSTMModule(
+        self.model = TransformerEncoderModule(
             target_dim=target_dim,
-            hidden_dim=hidden_dim,
+            d_model=d_model,
+            dim_feedforward=dim_feedforward,
             num_layers=num_layers,
+            num_heads=num_heads,
             num_quantiles=len(self.quantile_levels),
+            dropout=dropout,
         )
 
     @staticmethod
-    def load_model(path: str) -> "LSTMForecaster":
-        return LSTMForecaster.load_from_checkpoint(path)
+    def load_model(path: str) -> "TransfomerForecaster":
+        return TransfomerForecaster.load_from_checkpoint(path)
 
     def _predict_quantiles(self, input_seq: Tensor) -> Tensor:
         with torch.no_grad():
