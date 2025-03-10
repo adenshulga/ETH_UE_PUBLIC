@@ -3,7 +3,7 @@ from abc import abstractmethod, ABC
 
 import numpy as np
 from torch import Tensor
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, ConcatDataset
 
 from src.common_entities.custom_exceptions import CustomException
 from omegaconf import DictConfig
@@ -25,16 +25,17 @@ their orderbooks, options data, etc... I want to notate this input
 PricePoint = tuple[np.datetime64, float]
 
 
-class SizedDataset[T](ABC, Dataset[T]):
+# class SizedDataset[T](ABC, Dataset[T]):
+class SizedDataset[T](tp.Protocol):
     """Same as usual torch Dataset, but with enforcing of abstract methods"""
 
-    @abstractmethod
-    def __len__(self) -> int:
-        pass
+    def __len__(self) -> int: ...
 
-    @abstractmethod
-    def __getitem__(self, index: int) -> T:
-        pass
+    def __getitem__(self, index: int) -> T: ...
+
+    def __add__(self, other: "SizedDataset[T]") -> "SizedDataset[T]":
+        return ConcatDataset[T]([self, other])  # type: ignore
+        # here type ignore is used because ConcatDataset is poorly typed
 
 
 class SizedDatasetMapping[T](SizedDataset[T]):
@@ -55,15 +56,6 @@ class SizedDatasetMapping[T](SizedDataset[T]):
 
     def __getitem__(self, index: int) -> T:
         return self.original_dataset[self.indices_mapping[index]]
-
-
-HistoricPricesDataset = tp.NewType("HistoricPricesDataset", SizedDataset[PricePoint])
-LastNPricesRegularDataset = tp.NewType(
-    "LastNPricesRegularDataset", SizedDataset[Tensor]
-)  # Regular implies that points are regular in time
-LastNPricesUnRegularDataset = tp.NewType(
-    "LastNPricesUnRegularDataset", SizedDataset[list[PricePoint]]
-)
 
 
 class MultiModalDatasetError(CustomException):

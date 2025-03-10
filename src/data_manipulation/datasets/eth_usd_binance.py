@@ -6,8 +6,6 @@ from joblib import Memory
 
 from src.data_manipulation.custom_dataset_abc import PricePoint, SizedDataset
 
-from loguru import logger
-
 memory = Memory("data/cache")
 
 
@@ -43,21 +41,11 @@ class ETH_USD_Binance(SizedDataset[PricePoint]):  # type: ignore
             else np.datetime64(end_observations)
         )
 
-        # logger.debug(f"start: {self.start_observations}, end: {self.end_observations}")
-
-        # logger.debug(data["date"])
-        # logger.debug((self.start_observations <= data["date"]))
-        # logger.debug(data["date"] <= self.end_observations)
-
         mask = (self.start_observations <= data["date"]) & (
             data["date"] <= self.end_observations
         )
 
-        # logger.debug(mask)
-        # logger.debug(mask.any())
-
         self.data = tp.cast(tp.Sequence[PricePoint], data[mask])
-        # logger.debug(data)
 
     def __len__(self) -> int:
         return len(self.data)

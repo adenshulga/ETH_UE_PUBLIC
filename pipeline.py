@@ -52,7 +52,9 @@ def main[ElementaryDataT, TransformedDataT, PredictedT](
 
     # evaluation (It would be good to implement K-Fold crossvalidation later)
 
-    results_evaluator: Evaluator = instantiate(cfg["evaluator"])
+    results_evaluator: Evaluator[TransformedDataT, PredictedT] = instantiate(
+        cfg["evaluator"]
+    )
     results = results_evaluator.evaluate(prediction, test_dataset)
     results.log(comet_logger)
 
