@@ -18,7 +18,7 @@ class Results:
 
 
 @dataclass
-class Evaluator[TransformedDataT, PredictedT](ABC):
+class Evaluator[PredictedT, TransformedDataT](ABC):
     """
     - In future i want to save all metrics and results, push them to comet_ml
     - Single evaluator instance - single pipeline run
@@ -27,7 +27,7 @@ class Evaluator[TransformedDataT, PredictedT](ABC):
     @abstractmethod
     def evaluate(
         self,
-        model_predictions: tp.Sequence[PredictedT],
+        model_predictions: SizedDataset[PredictedT],
         test_dataset: SizedDataset[TransformedDataT],
     ) -> Results:
         pass

@@ -178,3 +178,9 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# temp files
+.temp/*
+
+# vs code aux files
+.vscode/*
