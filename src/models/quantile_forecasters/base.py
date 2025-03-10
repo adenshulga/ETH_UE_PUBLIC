@@ -71,7 +71,7 @@ class BaseQuantileForecaster(CustomModel, LightningModule):
             dataset: input sequence of the shape (b, d, l), where b is the
                 batch size, d is the dimensionality, l is the sequence length.
         Returns:
-            SizedDataset[Tensor]: predicted quantile values of the shape
+            Tensor: predicted quantile values of the shape
                 (b, d, h, q), where b is the batch size, d is the
                 dimensionality, h is the forecast horizon, q is the number of
                 quantiles.
