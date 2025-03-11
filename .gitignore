@@ -184,3 +184,6 @@ cython_debug/
 
 # vs code aux files
 .vscode/*
+.eth-ue/hparams.pth
+.eth-ue/model_checkpoint.ckpt
+checkpoints/*

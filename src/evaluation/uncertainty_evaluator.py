@@ -17,32 +17,25 @@ class UncertaintyEvaluator(Evaluator):
         """
         Args:
             model_predictions: predicted quantiles of the shape (b, d, l, q), 
-                where b is the batch size, d is the dimensionality, h is the 
+                where b is the batch size, d is the dimensionality, l is the 
                 forecast horizon, q is the number of quantiles.
             test_dataset: input sequence of the shape (b, d, l), where b is the
-                batch size, d is the dimensionality, h is the sequence length.
+                batch size, d is the dimensionality, l is the forecast horizon.
         Returns:
             Results: results with attributes metrics and images.
         """
-        pass
-        metrics = self._calculate_metrics(model_predictions, test_dataset)
+        pred = torch.tensor(model_predictions)
+        target = torch.tensor(test_dataset)
+        metrics = self._calculate_metrics(pred, target)
         return Results(metrics=metrics, images=None)
     
     @abstractmethod
-    def _calculate_metrics(self, model_predictions: SizedDataset[Tensor],
-        test_dataset: SizedDataset[Tensor],
-    ) -> dict:
+    def _calculate_metrics(self, pred: Tensor, target: Tensor) -> dict:
         pass
 
 
 class PICP(UncertaintyEvaluator):
-    def _calculate_metrics(
-        self,
-        model_predictions: SizedDataset[Tensor],
-        test_dataset: SizedDataset[Tensor],
-    ) -> dict:
-        pred = torch.tensor(model_predictions)
-        target = torch.tensor(test_dataset)
+    def _calculate_metrics(self, pred: Tensor, target: Tensor) -> dict:
         lbound = pred[:, :, :, 0]
         ubound = pred[:, :, :, -1]
         mask = (lbound <= target) & (target <= ubound)
@@ -51,13 +44,7 @@ class PICP(UncertaintyEvaluator):
 
 
 class ECE(UncertaintyEvaluator):
-    def _calculate_metrics(
-        self,
-        model_predictions: SizedDataset[Tensor],
-        test_dataset: SizedDataset[Tensor],
-    ) -> dict:
-        pred = torch.tensor(model_predictions)
-        target = torch.tensor(test_dataset)
+    def _calculate_metrics(self, pred: Tensor, target: Tensor) -> dict:
         ece = []
         for i in range(len(self.quantiles) // 2):
             lbound = pred[:, :, :, i]
@@ -69,13 +56,8 @@ class ECE(UncertaintyEvaluator):
 
 
 class CRPS(UncertaintyEvaluator):
-    def _calculate_metrics(
-        self,
-        model_predictions: SizedDataset[Tensor],
-        test_dataset: SizedDataset[Tensor],
-    ) -> dict:
-        pred = torch.tensor(model_predictions)
-        target = torch.tensor(test_dataset)[:, :, :, None]
+    def _calculate_metrics(self, pred: Tensor, target: Tensor) -> dict:
+        target = target[:, :, :, None]
         error = torch.abs(pred - target) * 2
         umask = target < pred
         lmask = target >= pred

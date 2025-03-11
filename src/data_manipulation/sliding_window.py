@@ -4,6 +4,11 @@ import torch
 
 
 class SlidingWindowDataset(SizedDataset[tuple[Tensor, Tensor]]):
+    """
+    Sliding window dataset iterates over pairs of an input sequnce and an output 
+    sequence, where the output sequnce is shifted from the input sequcen by a 
+    shift size.
+    """
     def __init__(
         self, 
         sequence: SizedDataset[Tensor],
@@ -11,6 +16,14 @@ class SlidingWindowDataset(SizedDataset[tuple[Tensor, Tensor]]):
         step_size: int, 
         shift_size: int
     ) -> None:
+        """
+        Args:
+            sequence: the sequence of the shape (d, l) where d is the
+                dimensionality, l is the sequence length.
+            window_size: the size of the window to slide over the sequence.
+            step_size: the step size to slide over the sequence.
+            shift_size: the shift size between input and output sequences.
+        """
         super().__init__()
         self.sequence = torch.tensor(sequence)
         self.window_size = window_size
@@ -20,6 +33,14 @@ class SlidingWindowDataset(SizedDataset[tuple[Tensor, Tensor]]):
             self.sequence.shape[1] - window_size - shift_size + 1) // step_size
 
     def __getitem__(self, idx: int) -> tuple[Tensor, Tensor]:
+        """
+        Args:
+            idx: the index of the requested element.
+        Returns:
+            tuple[Tensor, Tensor]: the pair of input and output sequences. Each 
+                sequence of the shape (d, l) where d is the dimensionality, l
+                is the window size.
+        """
         input_range = torch.arange(
             idx*self.step_size, idx*self.step_size + self.window_size)
         target_range = input_range + self.shift_size

@@ -18,7 +18,7 @@ class Results:
 
 
 @dataclass
-class Evaluator[PredictedT, TransformedDataT](ABC):
+class Evaluator[TransformedDataT, PredictedT](ABC):
     """
     - In future i want to save all metrics and results, push them to comet_ml
     - Single evaluator instance - single pipeline run
