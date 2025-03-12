@@ -28,16 +28,16 @@ class CustomModel[ElementaryDataT, TransformedDataT, PredictedT](Module, ABC):
     @abstractmethod
     def predict(
         self, dataset: SizedDataset[TransformedDataT]
-    ) -> tp.Sequence[PredictedT]:
+    ) -> SizedDataset[PredictedT]:
         pass
 
     @abstractmethod
     def save_model(self) -> str:
         """Returns path where model is saved"""
         pass
-
-    @abstractmethod
+    
     @staticmethod
+    @abstractmethod
     def load_model(path: str) -> "CustomModel":
         """Loads model given path"""
         pass
