@@ -12,9 +12,9 @@ class MLPModule(nn.Module):
         self.target_dim = target_dim
         self.num_quantiles = num_quantiles
         layers = [nn.Linear(target_dim, hidden_dim), nn.ReLU()]
-        layers.append(nn.Linear(hidden_dim, target_dim * num_quantiles))
         for _ in range(1, num_layers):
             layers.extend([nn.Linear(hidden_dim, hidden_dim), nn.ReLU()])
+        layers.append(nn.Linear(hidden_dim, target_dim * num_quantiles))
         self.mlp = nn.Sequential(*layers)
 
     def forward(self, x: Tensor) -> Tensor:
