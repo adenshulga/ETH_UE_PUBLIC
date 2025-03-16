@@ -53,8 +53,8 @@ class MLPForecaster(BaseTorchQuantileForecaster):
             lr: learning rate in training.
             accelerator: name of the device for training.
             enable_progress_bar: if True, enables progress bar in training.
-            num_layers: number of LSTM layers.
-            hidden_dim: hidden dimensionality of LSTM layers.
+            num_layers: number of MLP layers.
+            hidden_dim: hidden dimensionality of MLP layers.
         """
         super().__init__(
             input_len,
