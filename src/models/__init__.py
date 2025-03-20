@@ -3,6 +3,7 @@ from src.models.quantile_forecasters.lstm import LSTMForecaster
 from src.models.quantile_forecasters.mlp import MLPForecaster
 from src.models.quantile_forecasters.transformer import TransfomerForecaster
 from src.models.quantile_forecasters.gp import GPForecaster
+from src.models.quantile_forecasters.linear import LinearForecaster
 
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "MLPForecaster",
     "TransfomerForecaster",
     "GPForecaster",
+    "LinearForecaster",
 ]
