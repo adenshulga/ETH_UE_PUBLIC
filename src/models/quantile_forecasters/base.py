@@ -20,8 +20,8 @@ import typing as tp
 def quantile_loss(pred: Tensor, target: Tensor, q: Tensor):
     """
     Args:
-        pred: predicted quantile values of the shape (b, d, l, q)
-        target: target values of the shape (b, d, l)
+        pred: predicted quantile values of the shape (b, l, d, q)
+        target: target values of the shape (b, l, d)
         q: quantile levels of the shape (q,)
     """
     q = q[None, None, None, :]

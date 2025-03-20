@@ -16,10 +16,10 @@ class UncertaintyEvaluator(Evaluator):
     ) -> Results:
         """
         Args:
-            model_predictions: predicted quantiles of the shape (b, d, l, q), 
+            model_predictions: predicted quantiles of the shape (b, l, d, q), 
                 where b is the batch size, d is the dimensionality, l is the 
                 forecast horizon, q is the number of quantiles.
-            test_dataset: input sequence of the shape (b, d, l), where b is the
+            test_dataset: input sequence of the shape (b, l, d), where b is the
                 batch size, d is the dimensionality, l is the forecast horizon.
         Returns:
             Results: results with attributes metrics and images.

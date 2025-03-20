@@ -13,11 +13,12 @@ class TestOnSyntheticData:
         self.input_len = 100
         self.output_len = 25
         self.quantile_levels = [0.1, 0.5, 0.9]
-        self.train_seq = torch.rand(10, 1000)
-        self.test_seq = torch.rand(10, 1000)
         self.target_dim = 10
         self.num_epochs = 1
         self.batch_size = 10000
+        self.train_seq = torch.rand(self.batch_size, self.target_dim)
+        self.test_seq = torch.rand(self.batch_size, self.target_dim)
+        
 
     def create_model(self, model_class):
         if issubclass(model_class, BaseTorchQuantileForecaster):
@@ -42,8 +43,8 @@ class TestOnSyntheticData:
         model = self.create_model(model_class)
         train_dataset = model.transform(self.train_seq)
         input_seq, target_seq = train_dataset[0]
-        assert input_seq.shape == (self.train_seq.shape[0], self.input_len)
-        assert target_seq.shape == (self.train_seq.shape[0], self.input_len)
+        assert input_seq.shape == (self.input_len, self.target_dim)
+        assert target_seq.shape == (self.input_len, self.target_dim)
 
     @pytest.mark.parametrize('model_class', model_classes)
     def test_training(self, model_class):
@@ -60,8 +61,8 @@ class TestOnSyntheticData:
             pred = model.predict(input_seq)
             assert pred.shape == (
                 1, 
-                self.target_dim, 
-                self.output_len, 
+                self.output_len,
+                self.target_dim,
                 len(self.quantile_levels),
             )
             break
