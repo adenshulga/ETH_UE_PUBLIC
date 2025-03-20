@@ -14,10 +14,8 @@ class LinearModule(nn.Module):
         self.linear = nn.Linear(target_dim, target_dim * num_quantiles)
 
     def forward(self, x: Tensor) -> Tensor:
-        x = x.permute(0, 2, 1)
         x = self.linear(x)
-        x = x.permute(0, 2, 1)
-        x = x.reshape(x.shape[0], self.target_dim, -1, self.num_quantiles)
+        x = x.reshape(x.shape[0], -1, self.target_dim, self.num_quantiles)
         return x
 
 
@@ -76,5 +74,5 @@ class LinearForecaster(BaseTorchQuantileForecaster):
     def _predict_quantiles(self, input_seq: Tensor) -> Tensor:
         with torch.no_grad():
             qvalues = self.model(input_seq)
-        qvalues = qvalues[:, :, -self.output_len :, :]
+        qvalues = qvalues[:, -self.output_len:, :]
         return qvalues

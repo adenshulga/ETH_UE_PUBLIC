@@ -60,7 +60,7 @@ class BaseQuantileForecaster(CustomModel, LightningModule):
     def transform(self, dataset: SizedDataset[Tensor]) -> SlidingWindowDataset:
         """
         Args:
-            dataset: the sequence of the shape (d, l) where d is the 
+            dataset: the sequence of the shape (l, d) where d is the 
                 dimensionality, l is the sequence length.
         Returns:
             SlidingWindowDataset: the sliding window dataset that iterates 
@@ -76,15 +76,15 @@ class BaseQuantileForecaster(CustomModel, LightningModule):
     def predict(self, dataset: SizedDataset[Tensor]) -> SizedDataset[Tensor]:
         """
         Args:
-            dataset: input sequence of the shape (b, d, l), where b is the
+            dataset: input sequence of the shape (b, l, d), where b is the
                 batch size, d is the dimensionality, l is the sequence length.
         Returns:
             Tensor: predicted quantile values of the shape
-                (b, d, h, q), where b is the batch size, d is the
+                (b, h, d, q), where b is the batch size, d is the
                 dimensionality, h is the forecast horizon, q is the number of
                 quantiles.
         """
-        input_seq = torch.tensor(dataset)[:, :, -self.input_len :]
+        input_seq = torch.tensor(dataset)[:, -self.input_len:,  :]
         predicted_quantiles = self._predict_quantiles(input_seq)
         predicted_quantiles = tp.cast(SizedDataset[Tensor], predicted_quantiles)
         return predicted_quantiles

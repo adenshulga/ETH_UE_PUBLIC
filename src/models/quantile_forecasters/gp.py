@@ -29,7 +29,6 @@ class GPModule(nn.Module):
 
     def forward(self, x: Tensor) -> tuple[Tensor, Tensor]:
         batch_size = x.shape[0]
-        x = x.transpose(1, 2)  # (batch, dim, len) -> (batch, len, dim)
         x = x.reshape(-1, self.target_dim)
         K_xz = kernel(x, self.inducing_points, self.kernel_scale)
         mean = self.mean_linear(K_xz)
@@ -44,7 +43,6 @@ class GPModule(nn.Module):
         qvalues = qvalues.reshape(
             batch_size, -1, self.target_dim, len(self.quantile_levels)
         )
-        qvalues = qvalues.transpose(1, 2)
         return qvalues
 
 
@@ -109,5 +107,5 @@ class GPForecaster(BaseTorchQuantileForecaster):
     def _predict_quantiles(self, input_seq: Tensor) -> Tensor:
         with torch.no_grad():
             qvalues = self.model(input_seq)
-        qvalues = qvalues[:, :, -self.output_len :, :]
+        qvalues = qvalues[:, -self.output_len:, :, :]
         return qvalues

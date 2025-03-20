@@ -21,16 +21,16 @@ class NaiveGaussian(BaseQuantileForecaster):
         return NaiveGaussian(**hparams)
 
     def _predict_quantiles(self, input_seq: Tensor) -> Tensor:
-        loc = input_seq[:, :, [-1], None]
-        loc = loc.repeat(1, 1, self.output_len, len(self.quantile_levels))
-        residual = input_seq[:, :, 1:] - input_seq[:, :, :-1]
-        std = (residual**2).mean(dim=2) ** 0.5
-        std = std[:, :, None, None]
-        std = std.repeat(1, 1, self.output_len, len(self.quantile_levels))
+        loc = input_seq[:, [-1], :, None]
+        loc = loc.repeat(1, self.output_len, 1, len(self.quantile_levels))
+        residual = input_seq[:, 1:, :] - input_seq[:, :-1, :]
+        std = (residual**2).mean(dim=1) ** 0.5
+        std = std[:, None, :, None]
+        std = std.repeat(1, self.output_len, 1, len(self.quantile_levels))
         sqrt_len = torch.arange(1, self.output_len + 1) ** 0.5
-        std = std * sqrt_len[None, None, :, None]
+        std = std * sqrt_len[None, :, None, None]
         q = self.quantile_levels[None, None, None, :]
-        q = q.repeat(1, loc.shape[1], self.output_len, 1)
+        q = q.repeat(1, self.output_len, loc.shape[2], 1)
         qvalues = Normal(loc, std).icdf(q)
         return qvalues
 
@@ -72,14 +72,14 @@ class NaiveBootstrap(BaseQuantileForecaster):
         return NaiveBootstrap(**hparams)
 
     def _predict_quantiles(self, input_seq: Tensor) -> Tensor:
-        b, _, size = input_seq.shape
+        b, size, _ = input_seq.shape
         h = self.output_len
-        residual = input_seq[:, :, 1:] - input_seq[:, :, :-1]
-        forecast_sample = torch.zeros(b, self.target_dim, h, self.num_samples)
+        residual = input_seq[:, 1:, :] - input_seq[:, :-1, ]
+        forecast_sample = torch.zeros(b, h, self.target_dim, self.num_samples)
         for i in range(self.num_samples):
-            resampled_residual = residual[:, :, torch.randint(0, size - 1, (h,))]
-            last = input_seq[:, :, [-1]]
-            forecast_sample[:, :, :, i] = last + torch.cumsum(resampled_residual, dim=2)
+            resampled_residual = residual[:, torch.randint(0, size - 1, (h,))]
+            last = input_seq[:, [-1]]
+            forecast_sample[:, :, :, i] = last + torch.cumsum(resampled_residual, dim=1)
         qvalues = torch.quantile(forecast_sample, self.quantile_levels, dim=3)
         qvalues = qvalues.permute(1, 2, 3, 0)
         return qvalues

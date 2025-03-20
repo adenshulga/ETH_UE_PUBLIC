@@ -5,8 +5,8 @@ import torch
 class TestOnSyntheticData:
     def setup_class(self):
         torch.manual_seed(1)
-        self.test_dataset = torch.randn(16, 10, 100)
-        pred = torch.zeros(16, 10, 100, 5)
+        self.test_dataset = torch.randn(16, 100, 10)
+        pred = torch.zeros(16, 100, 10, 5)
         pred[:, :, :, 0] = -2
         pred[:, :, :, 1] = -1
         pred[:, :, :, 2] = 0
