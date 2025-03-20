@@ -5,8 +5,8 @@ import torch
 class TestOnSyntheticData:
     def setup_class(self):
         torch.manual_seed(1)
-        self.test_dataset = torch.randn(1, 10, 100)
-        pred = torch.zeros(1, 10, 100, 5)
+        self.test_dataset = torch.randn(16, 10, 100)
+        pred = torch.zeros(16, 10, 100, 5)
         pred[:, :, :, 0] = -2
         pred[:, :, :, 1] = -1
         pred[:, :, :, 2] = 0
@@ -30,4 +30,4 @@ class TestOnSyntheticData:
     def test_crps(self):
         evaluator = CRPS(quantiles=self.quantiles)
         res = evaluator.evaluate(self.model_prediction, self.test_dataset)
-        assert round(res.metrics['crps'], 2) == 2.48
+        assert round(res.metrics['crps'], 2) == 2.47

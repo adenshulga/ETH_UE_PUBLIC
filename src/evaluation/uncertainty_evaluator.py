@@ -63,7 +63,7 @@ class CRPS(UncertaintyEvaluator):
         umask = target < pred
         lmask = target >= pred
         q = torch.tensor(self.quantiles)[None, None, None, :]
-        q = q.repeat(1, pred.shape[1], pred.shape[2], 1)
+        q = q.repeat(pred.shape[0], pred.shape[1], pred.shape[2], 1)
         error[umask] = error[umask] * q[umask]
         error[lmask] = error[lmask] * (1 - q[lmask])
         return {'crps': error.mean().item()}
