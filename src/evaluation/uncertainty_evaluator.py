@@ -50,9 +50,10 @@ class ECE(UncertaintyEvaluator):
             lbound = pred[:, :, :, i]
             ubound = pred[:, :, :, -i-1]
             mask = (lbound <= target) & (target <= ubound)
-            picp = mask.float().mean().item()
+            picp = mask.float().mean()
             ece.append(abs(picp - (self.quantiles[-i-1] - self.quantiles[i])))
-        return {'ece': sum(ece) / len(ece)}
+        ece = (sum(ece) / len(ece)).item()
+        return {'ece': ece}
 
 
 class CRPS(UncertaintyEvaluator):
