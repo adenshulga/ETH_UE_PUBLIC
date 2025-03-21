@@ -28,7 +28,7 @@ def quantile_loss(pred: Tensor, target: Tensor, q: Tensor):
     target = target[..., None]
     upper = F.relu(pred - target) * (1 - q)
     lower = F.relu(target - pred) * q
-    loss = 2 * (upper + lower).sum(dim=(1, 2, 3))
+    loss = (upper + lower).sum(dim=(1, 2, 3))
     return loss.mean()
 
 
