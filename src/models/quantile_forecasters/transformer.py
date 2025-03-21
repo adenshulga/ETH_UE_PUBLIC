@@ -4,6 +4,22 @@ import torch.nn as nn
 from torch import Tensor
 
 
+class PositionalEncoding(nn.Module):
+    def __init__(self, d_model, max_len=10000):
+        super().__init__()
+        self.d_model = d_model
+        pe = torch.zeros((1, max_len, d_model))
+        position = torch.arange(max_len)[:, None]
+        div_term = 1 / max_len ** (torch.arange(0, self.d_model, 2) / self.d_model)
+        pe[0, :, 0::2] = torch.sin(position * div_term)
+        pe[0, :, 1::2] = torch.cos(position * div_term)
+        self.pe = pe
+
+    def forward(self, x):
+        seq_len = x.shape[1]
+        return x + self.pe[:, :seq_len]
+
+
 class TransformerEncoderModule(nn.Module):
     def __init__(
         self,
@@ -19,6 +35,7 @@ class TransformerEncoderModule(nn.Module):
         self.target_dim = target_dim
         self.num_quantiles = num_quantiles
         self.input_projection = nn.Linear(target_dim, d_model)
+        self.positional_encoding = PositionalEncoding(d_model)
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=d_model,
             nhead=num_heads,
@@ -27,7 +44,8 @@ class TransformerEncoderModule(nn.Module):
             batch_first=True,
         )
         self.transformer_encoder = nn.TransformerEncoder(
-            encoder_layer, num_layers=num_layers
+            encoder_layer,
+            num_layers=num_layers,
         )
         self.output_projection = nn.Linear(
             in_features=d_model, out_features=target_dim * num_quantiles
@@ -35,6 +53,7 @@ class TransformerEncoderModule(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         x = self.input_projection(x)
+        x = self.positional_encoding(x)
         x = self.transformer_encoder(x)
         x = self.output_projection(x)
         x = x.reshape(x.shape[0], -1, self.target_dim, self.num_quantiles)
@@ -75,7 +94,7 @@ class TransfomerForecaster(BaseTorchQuantileForecaster):
             num_layers: number of LSTM layers.
             d_model: the number of expected features in the input of Transformer.
             nhead: the number of heads in Transformer.
-            dim_feedforward: the dimension of the feedforward network model of 
+            dim_feedforward: the dimension of the feedforward network model of
                 Transformer.
             dropout: the dropout value of Transformer.
         """
@@ -115,5 +134,5 @@ class TransfomerForecaster(BaseTorchQuantileForecaster):
     def _predict_quantiles(self, input_seq: Tensor) -> Tensor:
         with torch.no_grad():
             qvalues = self.model(input_seq)
-        qvalues = qvalues[:, -self.output_len:, :, :]
+        qvalues = qvalues[:, -self.output_len :, :, :]
         return qvalues
