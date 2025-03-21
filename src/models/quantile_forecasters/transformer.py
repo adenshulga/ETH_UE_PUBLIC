@@ -5,7 +5,7 @@ from torch import Tensor
 
 
 class PositionalEncoding(nn.Module):
-    def __init__(self, d_model, max_len=10000):
+    def __init__(self, d_model: int, max_len: int = 10000):
         super().__init__()
         self.d_model = d_model
         pe = torch.zeros((1, max_len, d_model))
