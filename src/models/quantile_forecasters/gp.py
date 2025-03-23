@@ -59,6 +59,7 @@ class GPForecaster(BaseTorchQuantileForecaster):
         lr: float = 0.001,
         accelerator: str = "cpu",
         enable_progress_bar: bool = True,
+        logging: bool = False,
         num_inducing: int = 128,
         scale: float = 1.0,
     ):
@@ -74,6 +75,7 @@ class GPForecaster(BaseTorchQuantileForecaster):
             lr: learning rate in training.
             accelerator: name of the device for training.
             enable_progress_bar: if True, enables progress bar in training.
+            logging: if True, enables logging in Comet ML in training.
             num_inducing: number of inducing poinst to train Gaussian process.
             scale: scale of the RBF kernel in Gaussian process
         """
@@ -88,6 +90,8 @@ class GPForecaster(BaseTorchQuantileForecaster):
             lr,
             accelerator,
             enable_progress_bar,
+            logging,
+            False,
         )
         self.save_hyperparameters()
         self.num_inducing = num_inducing
@@ -103,9 +107,3 @@ class GPForecaster(BaseTorchQuantileForecaster):
     @staticmethod
     def load_model(path: str) -> "GPForecaster":
         return GPForecaster.load_from_checkpoint(path)
-
-    def _predict_quantiles(self, input_seq: Tensor) -> Tensor:
-        with torch.no_grad():
-            qvalues = self.model(input_seq)
-        qvalues = qvalues[:, -self.output_len:, :, :]
-        return qvalues

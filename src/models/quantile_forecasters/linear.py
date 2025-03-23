@@ -32,6 +32,8 @@ class LinearForecaster(BaseTorchQuantileForecaster):
         lr: float = 0.001,
         accelerator: str = "cpu",
         enable_progress_bar: bool = True,
+        logging: bool = False,
+        prevent_crossing = False,
     ):
         """
         Args:
@@ -45,6 +47,8 @@ class LinearForecaster(BaseTorchQuantileForecaster):
             lr: learning rate in training.
             accelerator: name of the device for training.
             enable_progress_bar: if True, enables progress bar in training.
+            logging: if True, enables logging in Comet ML in training.
+            prevent_crossing: if True, prevents quantile crossing issue.
             num_layers: number of MLP layers.
             hidden_dim: hidden dimensionality of MLP layers.
         """
@@ -59,6 +63,8 @@ class LinearForecaster(BaseTorchQuantileForecaster):
             lr,
             accelerator,
             enable_progress_bar,
+            logging,
+            prevent_crossing,
         )
         self.save_hyperparameters()
 

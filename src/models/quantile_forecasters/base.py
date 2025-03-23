@@ -118,6 +118,7 @@ class BaseTorchQuantileForecaster(BaseQuantileForecaster):
         accelerator: str = "cpu",
         enable_progress_bar: bool = True,
         logging: bool = False,
+        prevent_crossing = False,
     ):
         """
         Args:
@@ -132,6 +133,7 @@ class BaseTorchQuantileForecaster(BaseQuantileForecaster):
             accelerator: name of the device for training.
             enable_progress_bar: if True, enables progress bar in training.
             logging: if True, enables logging in Comet ML in training.
+            prevent_crossing: if True, prevents quantile crossing issue.
         """
         super().__init__(input_len, output_len, target_dim, quantile_levels, step_size)
         self.save_hyperparameters()
@@ -141,6 +143,7 @@ class BaseTorchQuantileForecaster(BaseQuantileForecaster):
         self.accelerator = accelerator
         self.enable_progress_bar = enable_progress_bar
         self.logging = logging
+        self.prevent_crossing = prevent_crossing
         self.model = nn.Module()
 
     def fit(self, dataset: SlidingWindowDataset) -> None:
@@ -180,6 +183,8 @@ class BaseTorchQuantileForecaster(BaseQuantileForecaster):
     def calc_loss(self, batch: Tensor) -> Tensor:
         input_seq, target_seq = batch
         qvalues = self.model(input_seq)
+        if self.prevent_crossing:
+            qvalues = self.prevent_quantile_crossing(qvalues)
         loss = quantile_loss(qvalues, target_seq, self.quantile_levels)
         return loss
 
@@ -188,3 +193,17 @@ class BaseTorchQuantileForecaster(BaseQuantileForecaster):
         checkpoint_path = os.path.join(save_dir, "model_checkpoint.ckpt")
         self.trainer.save_checkpoint(checkpoint_path)
         return checkpoint_path
+
+    def _predict_quantiles(self, input_seq: Tensor) -> Tensor:
+        with torch.no_grad():
+            qvalues = self.model(input_seq)
+        if self.prevent_crossing:
+            qvalues = self.prevent_quantile_crossing(qvalues)
+        qvalues = qvalues[:, -self.output_len :, :, :]
+        return qvalues
+
+    def prevent_quantile_crossing(self, qvalues: Tensor) -> Tensor:
+        activation = F.softplus(qvalues[:, :, :, 1:])
+        qvalues = torch.cat([qvalues[:, :, :, [0]], activation], dim=3)
+        qvalues = qvalues.cumsum(dim=3)
+        return qvalues

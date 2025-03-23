@@ -8,8 +8,7 @@ def print_metrics(model, test_dataset):
     test_dataloader = DataLoader(test_dataset, batch_size=len(test_dataset))
     for input_batch, ouput_batch in test_dataloader:
         break
-    with torch.no_grad():
-        prediction_batch = model.predict(input_batch)
+    prediction_batch = model.predict(input_batch)
     ouput_batch = ouput_batch[:, -model.output_len:]
 
     picp_evaluator = PICP(model.quantile_levels)
@@ -34,8 +33,7 @@ def plot_forecast(model, test_dataset, idx):
     output_seq = output_seq[None, -model.output_len:]
     input_seq = input_seq[None, :, :]
     full_seq = torch.cat([input_seq, output_seq], dim=1)
-    with torch.no_grad():
-        predicted_seq = model.predict(input_seq)
+    predicted_seq = model.predict(input_seq)
     lower_bound = predicted_seq[0, :, :, 0]
     upper_bound = predicted_seq[0, :, :, -1]
     plt.plot(full_range, full_seq[0])
