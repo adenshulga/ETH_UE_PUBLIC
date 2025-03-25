@@ -54,7 +54,8 @@ class TransformerEncoderModule(nn.Module):
     def forward(self, x: Tensor) -> Tensor:
         x = self.input_projection(x)
         x = self.positional_encoding(x)
-        x = self.transformer_encoder(x)
+        mask = torch.nn.Transformer.generate_square_subsequent_mask(x.shape[1])
+        x = self.transformer_encoder(x, mask=mask, is_causal=True)
         x = self.output_projection(x)
         x = x.reshape(x.shape[0], -1, self.target_dim, self.num_quantiles)
         return x
