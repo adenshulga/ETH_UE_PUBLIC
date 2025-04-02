@@ -16,10 +16,10 @@ class UncertaintyEvaluator(Evaluator):
     ) -> Results:
         """
         Args:
-            model_predictions: predicted quantiles of the shape (b, d, l, q), 
+            model_predictions: predicted quantiles of the shape (b, l, d, q), 
                 where b is the batch size, d is the dimensionality, l is the 
                 forecast horizon, q is the number of quantiles.
-            test_dataset: input sequence of the shape (b, d, l), where b is the
+            test_dataset: input sequence of the shape (b, l, d), where b is the
                 batch size, d is the dimensionality, l is the forecast horizon.
         Returns:
             Results: results with attributes metrics and images.
@@ -50,9 +50,10 @@ class ECE(UncertaintyEvaluator):
             lbound = pred[:, :, :, i]
             ubound = pred[:, :, :, -i-1]
             mask = (lbound <= target) & (target <= ubound)
-            picp = mask.float().mean().item()
+            picp = mask.float().mean()
             ece.append(abs(picp - (self.quantiles[-i-1] - self.quantiles[i])))
-        return {'ece': sum(ece) / len(ece)}
+        ece = (sum(ece) / len(ece)).item()
+        return {'ece': ece}
 
 
 class CRPS(UncertaintyEvaluator):
@@ -62,7 +63,7 @@ class CRPS(UncertaintyEvaluator):
         umask = target < pred
         lmask = target >= pred
         q = torch.tensor(self.quantiles)[None, None, None, :]
-        q = q.repeat(1, pred.shape[1], pred.shape[2], 1)
+        q = q.repeat(pred.shape[0], pred.shape[1], pred.shape[2], 1)
         error[umask] = error[umask] * q[umask]
         error[lmask] = error[lmask] * (1 - q[lmask])
         return {'crps': error.mean().item()}
